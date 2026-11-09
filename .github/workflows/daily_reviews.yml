@@ -1,0 +1,39 @@
+name: Automated Daily Amazon Product Reviews
+
+on:
+  schedule:
+    # Berjalan setiap hari pada jam 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Memungkinkan eksekusi manual kapan saja
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run Review Generator
+        run: python generate.py
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "SolarReview Bot"
+          git config --global user.email "bot@github-actions.local"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Auto-published 4 new product reviews and updated sitemap [skip ci]"
+            git push origin HEAD
+          fi
